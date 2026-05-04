@@ -196,8 +196,7 @@
   <p class="subtitle">Generative AI doesn't know what it's talking about, just ask the bible, it has all the answers to any question.</p>
 
   <div class="drop-zone" id="dz">
-    <input type="file" id="fi" accept=".txt,.md,.text">
-    <div class="drop-label">drop a text file here, or click to browse</div>
+        <div class="drop-label">loading Corpus.txt...</div>
     <div class="file-name" id="fn"></div>
   </div>
 
@@ -261,7 +260,7 @@ const SL=['glacial','slow','medium','fast','frantic'], SD=[110,55,22,8,1];
 const MEAN=12, MIN=1, MAX=120, BUCKETS=20;
 
 const $=id=>document.getElementById(id);
-const dz=$('dz'), fi=$('fi'), fn=$('fn'), stats=$('stats'), qi=$('qi'), ab=$('ab');
+const dz=$('dz'), fn=$('fn'), stats=$('stats'), qi=$('qi'), ab=$('ab');
 const ss=$('ss'), sv=$('sv'), sp=$('sp'), spv=$('spv');
 const dw=$('dw'), dl=$('dl'), db=$('db'), mr=$('mr'), sv2=$('sv2'), wv=$('wv'), zv=$('zv');
 const oc=$('oc'), oq=$('oq'), ot=$('ot'), ar=$('ar'), stb=$('stb'), cb=$('cb'), rb=$('rb');
@@ -315,10 +314,24 @@ function loadText(text) {
   qi.focus();
 }
 
-fi.addEventListener('change', e=>{const f=e.target.files[0];if(!f)return;fn.textContent=f.name;const r=new FileReader();r.onload=ev=>loadText(ev.target.result);r.readAsText(f);});
-dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('over');});
-dz.addEventListener('dragleave', ()=>dz.classList.remove('over'));
-dz.addEventListener('drop', e=>{e.preventDefault();dz.classList.remove('over');const f=e.dataTransfer.files[0];if(!f)return;fn.textContent=f.name;const r=new FileReader();r.onload=ev=>loadText(ev.target.result);r.readAsText(f);});
+async function loadCorpusFile() {
+  try {
+    const response = await fetch("Corpus.txt");
+
+    if (!response.ok) {
+      throw new Error("Could not load Corpus.txt");
+    }
+
+    const text = await response.text();
+
+    fn.textContent = "Corpus.txt";
+    loadText(text);
+
+  } catch (error) {
+    console.error(error);
+    fn.textContent = "Failed to load Corpus.txt";
+  }
+}
 ss.addEventListener('input', ()=>{sv.textContent=ss.value;buildBars(parseInt(ss.value));});
 sp.addEventListener('input', ()=>spv.textContent=SL[sp.value-1]);
 qi.addEventListener('keydown', e=>{if(e.key==='Enter')ab.click();});
@@ -368,6 +381,8 @@ ab.addEventListener('click',()=>{const q=qi.value.trim();if(!q||!words.length||t
 stb.addEventListener('click',()=>stopFlag=true);
 rb.addEventListener('click',()=>{if(!lastQ||typing)return;typeOut(lastQ);});
 cb.addEventListener('click',()=>{navigator.clipboard.writeText(built.trim()).then(()=>{cb.textContent='copied!';setTimeout(()=>cb.textContent='copy',1500);});});
+
+loadCorpusFile();
 </script>
 </body>
 </html>
