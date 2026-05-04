@@ -126,6 +126,19 @@
   .ctrl-row input[type=range] { width: 110px; accent-color: var(--text); }
   .ctrl-val { font-size: 13px; font-weight: 500; min-width: 28px; color: var(--text); }
 
+  .controls select {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 6px 8px;
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    cursor: pointer;
+    max-width: 200px;
+  }
+  .controls select:disabled { opacity: 0.4; cursor: not-allowed; }
+
   .dist-wrap { margin-bottom: 1.25rem; display: none; }
   .dist-bars { display: flex; align-items: flex-end; gap: 2px; height: 40px; }
   .bar { flex: 1; background: var(--border2); border-radius: 2px 2px 0 0; transition: background 0.2s, height 0.3s; }
@@ -195,11 +208,6 @@
   <h1>Ask The Bible</h1>
   <p class="subtitle">Generative AI doesn't know what it's talking about, just ask the bible, it has all the answers to any question.</p>
 
-  <div class="drop-zone" id="dz">
-        <div class="drop-label">loading Corpus.txt...</div>
-    <div class="file-name" id="fn"></div>
-  </div>
-
   <div class="stats" id="stats" style="display:none"></div>
 
   <div style="margin-bottom:1rem">
@@ -212,18 +220,17 @@
 
   <div class="controls">
     <div class="ctrl">
-      <span class="label">spread (σ)</span>
-      <div class="ctrl-row">
-        <input type="range" id="ss" min="3" max="30" value="12" step="1" disabled>
-        <span class="ctrl-val" id="sv">12</span>
-      </div>
-    </div>
-    <div class="ctrl">
       <span class="label">typing speed</span>
       <div class="ctrl-row">
         <input type="range" id="sp" min="1" max="5" value="4" step="1" disabled>
         <span class="ctrl-val" id="spv">fast</span>
       </div>
+    </div>
+    <div class="ctrl">
+      <span class="label">voice</span>
+      <select id="vsel" disabled>
+        <option value="">— loading voices —</option>
+      </select>
     </div>
   </div>
 
@@ -257,14 +264,53 @@
 <script>
 let words=[], typing=false, stopFlag=false, history=[], lastQ='', built='';
 const SL=['glacial','slow','medium','fast','frantic'], SD=[110,55,22,8,1];
-const MEAN=12, MIN=1, MAX=120, BUCKETS=20;
+const MEAN=12, MIN=1, MAX=120, BUCKETS=20, SIGMA=7;
 
 const $=id=>document.getElementById(id);
-const dz=$('dz'), fn=$('fn'), stats=$('stats'), qi=$('qi'), ab=$('ab');
-const ss=$('ss'), sv=$('sv'), sp=$('sp'), spv=$('spv');
+const stats=$('stats'), qi=$('qi'), ab=$('ab');
+const sp=$('sp'), spv=$('spv');
+const vsel=$('vsel');
 const dw=$('dw'), dl=$('dl'), db=$('db'), mr=$('mr'), sv2=$('sv2'), wv=$('wv'), zv=$('zv');
-const oc=$('oc'), oq=$('oq'), ot=$('ot'), ar=$('ar'), stb=$('stb'), cb=$('cb'), rb=$('rb');
 const hs=$('hs'), hl=$('hl');
+
+// ── TTS ──────────────────────────────────────────────────
+let voices=[];
+function populateVoices() {
+  voices=speechSynthesis.getVoices();
+  if(!voices.length) return;
+  vsel.innerHTML='<option value="off">🔇 off</option>';
+  voices.forEach((v,i)=>{
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=v.name+(v.lang?' ('+v.lang+')':'');
+    vsel.appendChild(o);
+  });
+  // default: pick most robotic-sounding (prefer "zira", "fred", "espeak", else first)
+  const pref=['fred','zira','espeak','microsoft david','google uk english male'];
+  let pick=0;
+  for(const p of pref){
+    const idx=voices.findIndex(v=>v.name.toLowerCase().includes(p));
+    if(idx!==-1){pick=idx;break;}
+  }
+  vsel.value=pick;
+  if(words.length) vsel.disabled=false;
+}
+speechSynthesis.addEventListener('voiceschanged', populateVoices);
+populateVoices();
+
+function speakWord(word) {
+  if(vsel.value==='off'||!voices.length) return;
+  const utt=new SpeechSynthesisUtterance(word);
+  const v=voices[parseInt(vsel.value)];
+  if(v) utt.voice=v;
+  utt.rate=0.85;
+  utt.pitch=0.6;
+  utt.volume=1;
+  speechSynthesis.speak(utt);
+}
+
+function stopSpeech() { speechSynthesis.cancel(); }
+// ─────────────────────────────────────────────────────────
 
 function hash(str) {
   let h = 2166136261 >>> 0;
@@ -308,9 +354,8 @@ function loadText(text) {
   const u=new Set(words).size;
   stats.innerHTML=`<span class="stat"><strong>${words.length.toLocaleString()}</strong> words</span><span class="stat"><strong>${u.toLocaleString()}</strong> unique</span>`;
   stats.style.display='flex';
-  [qi,ab,ss,sp].forEach(el=>el.disabled=false);
-  dw.style.display='block';
-  buildBars(parseInt(ss.value));
+  [qi,ab,sp].forEach(el=>el.disabled=false);
+  if(voices.length) vsel.disabled=false;
   qi.focus();
 }
 
@@ -323,21 +368,17 @@ async function loadCorpusFile() {
     }
 
     const text = await response.text();
-
-    fn.textContent = "Corpus.txt";
     loadText(text);
 
   } catch (error) {
     console.error(error);
-    fn.textContent = "Failed to load Corpus.txt";
   }
 }
-ss.addEventListener('input', ()=>{sv.textContent=ss.value;buildBars(parseInt(ss.value));});
 sp.addEventListener('input', ()=>spv.textContent=SL[sp.value-1]);
 qi.addEventListener('keydown', e=>{if(e.key==='Enter')ab.click();});
 
 function generate(q) {
-  const seed=hash(q.trim().toLowerCase()), rand=mkRand(seed), sigma=parseInt(ss.value);
+  const seed=hash(q.trim().toLowerCase()), rand=mkRand(seed), sigma=SIGMA;
   const count=sampleCount(rand,sigma), z=((count-MEAN)/sigma).toFixed(2);
   const sel=[];
   for(let i=0;i<count;i++) sel.push(words[Math.floor(rand()*words.length)]);
@@ -354,9 +395,11 @@ async function typeOut(q) {
   mr.style.display='flex'; sv2.textContent=seed; wv.textContent=count; zv.textContent=z+'σ';
   ar.style.display='flex'; stb.style.display=''; cb.style.display='none'; rb.style.display='none';
   hlBucket(count);
+  stopSpeech();
   const delay=SD[sp.value-1];
   for(let i=0;i<sel.length;i++){
     if(stopFlag) break;
+    speakWord(sel[i]);
     for(let c=0;c<sel[i].length;c++){if(stopFlag)break;built+=sel[i][c];ot.innerHTML=built+'<span class="cursor"></span>';await sleep(delay);}
     if(!stopFlag&&i<sel.length-1){built+=' ';ot.innerHTML=built+'<span class="cursor"></span>';await sleep(delay*1.8);}
   }
@@ -378,7 +421,7 @@ function addHistory(q,seed,count){
 }
 
 ab.addEventListener('click',()=>{const q=qi.value.trim();if(!q||!words.length||typing)return;const{seed,count}=generate(q);addHistory(q,seed,count);typeOut(q);});
-stb.addEventListener('click',()=>stopFlag=true);
+stb.addEventListener('click',()=>{stopFlag=true;stopSpeech();});
 rb.addEventListener('click',()=>{if(!lastQ||typing)return;typeOut(lastQ);});
 cb.addEventListener('click',()=>{navigator.clipboard.writeText(built.trim()).then(()=>{cb.textContent='copied!';setTimeout(()=>cb.textContent='copy',1500);});});
 
