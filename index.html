@@ -269,7 +269,6 @@ const MEAN=12, MIN=1, MAX=120, BUCKETS=20, SIGMA=7;
 const $=id=>document.getElementById(id);
 const stats=$('stats'), qi=$('qi'), ab=$('ab');
 const sp=$('sp'), spv=$('spv');
-const vsel=$('vsel');
 const dw=$('dw'), dl=$('dl'), db=$('db'), mr=$('mr'), sv2=$('sv2'), wv=$('wv'), zv=$('zv');
 const hs=$('hs'), hl=$('hl');
 
@@ -355,7 +354,6 @@ function loadText(text) {
   stats.innerHTML=`<span class="stat"><strong>${words.length.toLocaleString()}</strong> words</span><span class="stat"><strong>${u.toLocaleString()}</strong> unique</span>`;
   stats.style.display='flex';
   [qi,ab,sp].forEach(el=>el.disabled=false);
-  if(voices.length) vsel.disabled=false;
   qi.focus();
 }
 
