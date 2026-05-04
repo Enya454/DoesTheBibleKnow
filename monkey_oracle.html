@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monkey Oracle</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeede9;
+    --text: #1a1a1a;
+    --text2: #6b6b68;
+    --text3: #9b9b98;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1c;
+      --bg2: #252525;
+      --bg3: #2e2e2e;
+      --text: #f0f0ee;
+      --text2: #9a9a96;
+      --text3: #6a6a66;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+    }
+  }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container { max-width: 680px; margin: 0 auto; }
+
+  h1 {
+    font-family: 'Special Elite', cursive;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 0.25rem;
+  }
+  .subtitle { font-size: 12px; color: var(--text2); margin-bottom: 2rem; letter-spacing: 0.04em; }
+
+  .label {
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .drop-zone {
+    border: 1.5px dashed var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 1.25rem;
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.over { background: var(--bg2); }
+  .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-zone .drop-label { font-size: 13px; color: var(--text2); }
+  .drop-zone .file-name { font-size: 13px; color: var(--text); font-weight: 500; margin-top: 4px; }
+
+  .stats { display: flex; gap: 16px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .stat { font-size: 12px; color: var(--text2); }
+  .stat strong { color: var(--text); font-weight: 500; }
+
+  .question-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .question-row input {
+    flex: 1;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 9px 12px;
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    outline: none;
+  }
+  .question-row input:focus { border-color: var(--text3); box-shadow: 0 0 0 3px var(--border); }
+  .question-row input::placeholder { color: var(--text3); }
+  .question-row input:disabled { opacity: 0.4; }
+
+  button {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    padding: 9px 16px;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .btn-primary {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { opacity: 0.8; }
+  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    color: var(--text2);
+  }
+  .btn-secondary:hover { background: var(--bg2); }
+
+  .controls { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: flex-end; }
+  .ctrl { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-row { display: flex; align-items: center; gap: 10px; }
+  .ctrl-row input[type=range] { width: 110px; accent-color: var(--text); }
+  .ctrl-val { font-size: 13px; font-weight: 500; min-width: 28px; color: var(--text); }
+
+  .dist-wrap { margin-bottom: 1.25rem; display: none; }
+  .dist-bars { display: flex; align-items: flex-end; gap: 2px; height: 40px; }
+  .bar { flex: 1; background: var(--border2); border-radius: 2px 2px 0 0; transition: background 0.2s, height 0.3s; }
+  .bar.active { background: var(--text); }
+  .dist-axis { display: flex; justify-content: space-between; margin-top: 4px; }
+  .dist-axis span { font-size: 10px; color: var(--text3); }
+
+  .meta {
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 1rem;
+    display: none;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .meta b { color: var(--text); font-weight: 500; }
+
+  .output-card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    min-height: 90px;
+    margin-bottom: 0.75rem;
+    display: none;
+  }
+  .output-q { font-size: 12px; color: var(--text2); margin-bottom: 10px; font-style: italic; }
+  .output-text {
+    font-family: 'Special Elite', cursive;
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--text2);
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+    margin-left: 1px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .action-row { display: flex; gap: 8px; margin-bottom: 1.5rem; display: none; }
+
+  .history { margin-top: 1.5rem; display: none; }
+  .hist-item {
+    border-top: 0.5px solid var(--border);
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .hist-item:hover .hq { color: var(--text); }
+  .hq { font-size: 13px; color: var(--text2); flex: 1; transition: color 0.1s; }
+  .hm { font-size: 11px; color: var(--text3); text-align: right; line-height: 1.6; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>The Monkey Oracle</h1>
+  <p class="subtitle">deterministic answers from your text — same question, same answer, always</p>
+
+  <div class="drop-zone" id="dz">
+    <input type="file" id="fi" accept=".txt,.md,.text">
+    <div class="drop-label">drop a text file here, or click to browse</div>
+    <div class="file-name" id="fn"></div>
+  </div>
+
+  <div class="stats" id="stats" style="display:none"></div>
+
+  <div style="margin-bottom:1rem">
+    <span class="label">your question</span>
+    <div class="question-row">
+      <input type="text" id="qi" placeholder="ask anything..." disabled>
+      <button class="btn-primary" id="ab" disabled>ask</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl">
+      <span class="label">spread (σ)</span>
+      <div class="ctrl-row">
+        <input type="range" id="ss" min="3" max="30" value="12" step="1" disabled>
+        <span class="ctrl-val" id="sv">12</span>
+      </div>
+    </div>
+    <div class="ctrl">
+      <span class="label">typing speed</span>
+      <div class="ctrl-row">
+        <input type="range" id="sp" min="1" max="5" value="4" step="1" disabled>
+        <span class="ctrl-val" id="spv">fast</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dist-wrap" id="dw">
+    <span class="label" id="dl">word count distribution (μ=12, σ=12, range 1–120)</span>
+    <div class="dist-bars" id="db"></div>
+    <div class="dist-axis"><span>1</span><span>~12</span><span>~40</span><span>~80</span><span>120</span></div>
+  </div>
+
+  <div class="meta" id="mr">
+    seed <b id="sv2">—</b> &nbsp; words <b id="wv">—</b> &nbsp; z-score <b id="zv">—</b>
+  </div>
+
+  <div class="output-card" id="oc">
+    <div class="output-q" id="oq"></div>
+    <div class="output-text" id="ot"><span class="cursor"></span></div>
+  </div>
+
+  <div class="action-row" id="ar">
+    <button class="btn-secondary" id="stb" style="display:none">stop</button>
+    <button class="btn-secondary" id="cb" style="display:none">copy</button>
+    <button class="btn-secondary" id="rb" style="display:none">replay</button>
+  </div>
+
+  <div class="history" id="hs">
+    <span class="label">history — click to replay</span>
+    <div id="hl"></div>
+  </div>
+</div>
+
+<script>
+let words=[], typing=false, stopFlag=false, history=[], lastQ='', built='';
+const SL=['glacial','slow','medium','fast','frantic'], SD=[110,55,22,8,1];
+const MEAN=12, MIN=1, MAX=120, BUCKETS=20;
+
+const $=id=>document.getElementById(id);
+const dz=$('dz'), fi=$('fi'), fn=$('fn'), stats=$('stats'), qi=$('qi'), ab=$('ab');
+const ss=$('ss'), sv=$('sv'), sp=$('sp'), spv=$('spv');
+const dw=$('dw'), dl=$('dl'), db=$('db'), mr=$('mr'), sv2=$('sv2'), wv=$('wv'), zv=$('zv');
+const oc=$('oc'), oq=$('oq'), ot=$('ot'), ar=$('ar'), stb=$('stb'), cb=$('cb'), rb=$('rb');
+const hs=$('hs'), hl=$('hl');
+
+function hash(str) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h;
+}
+
+function mkRand(seed) {
+  let s = seed >>> 0;
+  return () => { s^=s<<13; s^=s>>17; s^=s<<5; s=s>>>0; return s/4294967296; };
+}
+
+function boxMuller(r) {
+  const u1 = Math.max(r(), 1e-10), u2 = r();
+  return Math.sqrt(-2*Math.log(u1)) * Math.cos(2*Math.PI*u2);
+}
+
+function sampleCount(rand, sigma) {
+  return Math.max(MIN, Math.min(MAX, Math.round(MEAN + boxMuller(rand)*sigma)));
+}
+
+function buildBars(sigma) {
+  const bsz=(MAX-MIN)/BUCKETS, counts=new Array(BUCKETS).fill(0), N=4000, r=mkRand(99);
+  for(let i=0;i<N;i++){const v=sampleCount(r,sigma);counts[Math.min(BUCKETS-1,Math.floor((v-MIN)/bsz))]++;}
+  const mx=Math.max(...counts);
+  db.innerHTML='';
+  counts.forEach(c=>{const d=document.createElement('div');d.className='bar';d.style.height=Math.max(2,Math.round(c/mx*40))+'px';db.appendChild(d);});
+  dl.textContent=`word count distribution (μ=${MEAN}, σ=${sigma}, range ${MIN}–${MAX})`;
+}
+
+function hlBucket(count) {
+  const bsz=(MAX-MIN)/BUCKETS, bi=Math.min(BUCKETS-1,Math.floor((count-MIN)/bsz));
+  db.querySelectorAll('.bar').forEach((b,i)=>b.classList.toggle('active',i===bi));
+}
+
+function loadText(text) {
+  words=text.split(/\s+/).filter(w=>w.length>0);
+  const u=new Set(words).size;
+  stats.innerHTML=`<span class="stat"><strong>${words.length.toLocaleString()}</strong> words</span><span class="stat"><strong>${u.toLocaleString()}</strong> unique</span>`;
+  stats.style.display='flex';
+  [qi,ab,ss,sp].forEach(el=>el.disabled=false);
+  dw.style.display='block';
+  buildBars(parseInt(ss.value));
+  qi.focus();
+}
+
+fi.addEventListener('change', e=>{const f=e.target.files[0];if(!f)return;fn.textContent=f.name;const r=new FileReader();r.onload=ev=>loadText(ev.target.result);r.readAsText(f);});
+dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('over'));
+dz.addEventListener('drop', e=>{e.preventDefault();dz.classList.remove('over');const f=e.dataTransfer.files[0];if(!f)return;fn.textContent=f.name;const r=new FileReader();r.onload=ev=>loadText(ev.target.result);r.readAsText(f);});
+ss.addEventListener('input', ()=>{sv.textContent=ss.value;buildBars(parseInt(ss.value));});
+sp.addEventListener('input', ()=>spv.textContent=SL[sp.value-1]);
+qi.addEventListener('keydown', e=>{if(e.key==='Enter')ab.click();});
+
+function generate(q) {
+  const seed=hash(q.trim().toLowerCase()), rand=mkRand(seed), sigma=parseInt(ss.value);
+  const count=sampleCount(rand,sigma), z=((count-MEAN)/sigma).toFixed(2);
+  const sel=[];
+  for(let i=0;i<count;i++) sel.push(words[Math.floor(rand()*words.length)]);
+  return {seed,count,z,sel};
+}
+
+const sleep = ms=>new Promise(r=>setTimeout(r,ms));
+
+async function typeOut(q) {
+  if(!words.length||typing) return;
+  const{seed,count,z,sel}=generate(q);
+  stopFlag=false; typing=true; lastQ=q; built='';
+  oc.style.display='block'; oq.textContent='"'+q+'"'; ot.innerHTML='<span class="cursor"></span>';
+  mr.style.display='flex'; sv2.textContent=seed; wv.textContent=count; zv.textContent=z+'σ';
+  ar.style.display='flex'; stb.style.display=''; cb.style.display='none'; rb.style.display='none';
+  hlBucket(count);
+  const delay=SD[sp.value-1];
+  for(let i=0;i<sel.length;i++){
+    if(stopFlag) break;
+    for(let c=0;c<sel[i].length;c++){if(stopFlag)break;built+=sel[i][c];ot.innerHTML=built+'<span class="cursor"></span>';await sleep(delay);}
+    if(!stopFlag&&i<sel.length-1){built+=' ';ot.innerHTML=built+'<span class="cursor"></span>';await sleep(delay*1.8);}
+  }
+  typing=false; stb.style.display='none'; cb.style.display=''; rb.style.display='';
+  ot.innerHTML=built+'<span class="cursor"></span>';
+}
+
+function addHistory(q,seed,count){
+  history=history.filter(h=>h.q!==q);
+  history.unshift({q,seed,count});
+  if(history.length>10) history.pop();
+  hs.style.display='block'; hl.innerHTML='';
+  for(const it of history){
+    const d=document.createElement('div'); d.className='hist-item';
+    d.innerHTML=`<span class="hq">${it.q}</span><span class="hm">seed ${it.seed}<br>${it.count} words</span>`;
+    d.addEventListener('click',()=>{qi.value=it.q;typeOut(it.q);});
+    hl.appendChild(d);
+  }
+}
+
+ab.addEventListener('click',()=>{const q=qi.value.trim();if(!q||!words.length||typing)return;const{seed,count}=generate(q);addHistory(q,seed,count);typeOut(q);});
+stb.addEventListener('click',()=>stopFlag=true);
+rb.addEventListener('click',()=>{if(!lastQ||typing)return;typeOut(lastQ);});
+cb.addEventListener('click',()=>{navigator.clipboard.writeText(built.trim()).then(()=>{cb.textContent='copied!';setTimeout(()=>cb.textContent='copy',1500);});});
+</script>
+</body>
+</html>
