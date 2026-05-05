@@ -137,9 +137,7 @@
   .divider::before, .divider::after { content: ''; flex: 1; height: 0.5px; background: linear-gradient(to right, transparent, rgba(220,180,80,0.8), transparent); }
   .divider span { font-size: 14px; color: #d4a840; }
 
-  .stats { display: flex; gap: 16px; margin-bottom: 1.75rem; flex-wrap: wrap; justify-content: center; }
-  .stat { font-size: 12px; color: rgba(245,233,200,0.5); font-family: 'Cinzel', serif; letter-spacing: 0.06em; }
-  .stat strong { color: #f5d87a; font-weight: 600; }
+  .stats { display: none !important; }
 
   .label { font-family: 'Cinzel', serif; font-size: 10px; color: rgba(245,233,200,0.45); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; display: block; }
 
@@ -261,6 +259,156 @@
   .particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
   .mote { position: absolute; border-radius: 50%; background: rgba(255,230,120,0.7); animation: floatUp linear infinite; }
   @keyframes floatUp { 0% { transform: translateY(0) translateX(0); opacity: 0; } 10% { opacity: 0.8; } 90% { opacity: 0.6; } 100% { transform: translateY(-100vh) translateX(30px); opacity: 0; } }
+
+  .footer-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 20;
+    background: rgba(6,3,18,0.82);
+    backdrop-filter: blur(14px);
+    border-top: 0.5px solid rgba(220,180,80,0.2);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .footer-voice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .footer-voice .label { margin-bottom: 0; white-space: nowrap; }
+  .footer-voice select {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    padding: 5px 8px;
+    background: rgba(10,5,30,0.7);
+    border: 0.5px solid rgba(220,180,80,0.35);
+    border-radius: 6px;
+    color: #f5e9c8;
+    cursor: pointer;
+    max-width: 180px;
+    letter-spacing: 0.03em;
+  }
+  .footer-voice select:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .footer-credit { text-align: right; flex: 1; min-width: 0; }
+  .credit-name {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    color: rgba(245,220,120,0.45);
+    letter-spacing: 0.1em;
+    margin-bottom: 2px;
+  }
+  .credit-disclaimer {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: rgba(245,233,200,0.22);
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 2rem 1rem 7rem; }
+    h1 { font-size: 36px; }
+    .subtitle { font-size: 10px; letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+    .question-row input { font-size: 14px; padding: 10px 10px; }
+    button { padding: 10px 12px; font-size: 11px; }
+    .output-text { font-size: 15px; }
+    .gate { width: 20px; }
+    .footer-bar { padding: 8px 14px; flex-direction: column; align-items: flex-start; gap: 6px; }
+    .footer-credit { text-align: left; width: 100%; }
+    .credit-disclaimer { white-space: normal; font-size: 10px; }
+    .footer-voice select { max-width: 100%; width: 100%; }
+    .footer-voice { width: 100%; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .action-row { flex-wrap: wrap; }
+    .hist-item { flex-direction: column; gap: 4px; }
+    .hm { text-align: left; }
+  }
+
+  @media (min-width: 601px) {
+    .container { padding-bottom: 5rem; }
+  }
+
+  .share-backdrop {
+    position: fixed; inset: 0; z-index: 30;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+  }
+  .share-modal {
+    position: fixed;
+    z-index: 31;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(8,4,24,0.97);
+    border: 0.5px solid rgba(220,180,80,0.35);
+    border-radius: 14px;
+    padding: 1.75rem 2rem;
+    width: min(420px, 92vw);
+    text-align: center;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,220,80,0.1);
+  }
+  .share-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(245,220,120,0.6);
+    margin-bottom: 1rem;
+  }
+  .share-preview {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: rgba(245,233,200,0.5);
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+    max-height: 80px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+  .share-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .share-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 0.5px solid rgba(220,180,80,0.25);
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    color: #f5e9c8;
+  }
+  .share-btn:hover { opacity: 0.82; transform: scale(0.98); }
+  .share-x        { background: rgba(0,0,0,0.6); }
+  .share-facebook { background: rgba(24,60,120,0.6); }
+  .share-whatsapp { background: rgba(10,80,40,0.6); }
+  .share-copy     { background: rgba(80,60,10,0.6); }
+  .share-close {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    background: transparent;
+    border: none;
+    color: rgba(245,233,200,0.3);
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .share-close:hover { color: rgba(245,233,200,0.6); }
 </style>
 </head>
 <body>
@@ -281,16 +429,7 @@
 <div class="particles" id="ptcl"></div>
 
 <div class="container">
-  <div class="halo">
-    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="22" cy="22" r="18" stroke="rgba(255,220,80,0.6)" stroke-width="0.8"/>
-      <circle cx="22" cy="22" r="12" stroke="rgba(255,220,80,0.4)" stroke-width="0.5"/>
-      <path d="M22 4 L24 14 L22 12 L20 14 Z" fill="rgba(255,220,80,0.7)"/>
-      <path d="M22 40 L24 30 L22 32 L20 30 Z" fill="rgba(255,220,80,0.7)"/>
-      <path d="M4 22 L14 24 L12 22 L14 20 Z" fill="rgba(255,220,80,0.7)"/>
-      <path d="M40 22 L30 24 L32 22 L30 20 Z" fill="rgba(255,220,80,0.7)"/>
-    </svg>
-  </div>
+  <div style="height:90px;margin-bottom:1rem"></div>
 
   <h1>Ask The Bible</h1>
   <p class="subtitle">Seek and ye shall receive &nbsp;·&nbsp; The word made manifest</p>
@@ -306,19 +445,6 @@
     </div>
   </div>
 
-  <div class="controls">
-    <div class="ctrl">
-      <span class="label">typing speed</span>
-      <div class="ctrl-row">
-        <input type="range" id="sp" min="1" max="5" value="4" step="1" disabled>
-        <span class="ctrl-val" id="spv">fast</span>
-      </div>
-    </div>
-    <div class="ctrl">
-      <span class="label">voice of the lord</span>
-      <select id="vsel" disabled><option value="">— loading voices —</option></select>
-    </div>
-  </div>
 
   <div class="meta" id="mr">seed <b id="sv2">—</b> &nbsp; words <b id="wv">—</b> &nbsp; z-score <b id="zv">—</b></div>
 
@@ -331,11 +457,38 @@
     <button class="btn-secondary" id="stb" style="display:none">silence</button>
     <button class="btn-secondary" id="cb"  style="display:none">copy</button>
     <button class="btn-secondary" id="rb"  style="display:none">ask again</button>
+    <button class="btn-secondary" id="shb" style="display:none">share</button>
+  </div>
+
+  <!-- Share modal -->
+  <div class="share-backdrop" id="sbk" style="display:none"></div>
+  <div class="share-modal" id="smd" style="display:none">
+    <p class="share-title">spread the word</p>
+    <p class="share-preview" id="spv"></p>
+    <div class="share-buttons">
+      <button class="share-btn share-x"        id="sx">𝕏 / Twitter</button>
+      <button class="share-btn share-facebook"  id="sf">Facebook</button>
+      <button class="share-btn share-whatsapp"  id="sw">WhatsApp</button>
+      <button class="share-btn share-copy"      id="sc">Copy text</button>
+    </div>
+    <button class="share-close" id="scl">✕ close</button>
   </div>
 
   <div class="history" id="hs">
     <span class="hist-label">scrolls of thy past questions</span>
     <div id="hl"></div>
+  </div>
+
+</div>
+
+<div class="footer-bar">
+  <div class="footer-voice">
+    <span class="label">voice of the lord</span>
+    <select id="vsel" disabled><option value="">— loading voices —</option></select>
+  </div>
+  <div class="footer-credit">
+    <p class="credit-name">Created by Reilly Westende</p>
+    <p class="credit-disclaimer">This is a parody. Responses are random scripture words — not the actual word of God.</p>
   </div>
 </div>
 
@@ -345,10 +498,11 @@ const SL=['glacial','slow','medium','fast','frantic'], SD=[110,55,22,8,1];
 const MEAN=12, MIN=1, MAX=120, SIGMA=7;
 
 const $=id=>document.getElementById(id);
-const stats=$('stats'), qi=$('qi'), ab=$('ab'), sp=$('sp'), spv=$('spv'), vsel=$('vsel');
+const stats=$('stats'), qi=$('qi'), ab=$('ab'), vsel=$('vsel');
 const mr=$('mr'), sv2=$('sv2'), wv=$('wv'), zv=$('zv');
-const oc=$('oc'), oq=$('oq'), ot=$('ot'), ar=$('ar'), stb=$('stb'), cb=$('cb'), rb=$('rb');
+const oc=$('oc'), oq=$('oq'), ot=$('ot'), ar=$('ar'), stb=$('stb'), cb=$('cb'), rb=$('rb'), shb=$('shb');
 const hs=$('hs'), hl=$('hl');
+const sbk=$('sbk'), smd=$('smd'), spv=$('spv');
 
 (function spawnMotes(){
   const c=$('ptcl');
@@ -392,10 +546,7 @@ function sampleCount(rand,sigma){return Math.max(MIN,Math.min(MAX,Math.round(MEA
 
 function loadText(text){
   words=text.split(/\s+/).filter(w=>w.length>0);
-  const u=new Set(words).size;
-  stats.innerHTML=`<span class="stat"><strong>${words.length.toLocaleString()}</strong> words</span><span class="stat"><strong>${u.toLocaleString()}</strong> unique</span>`;
-  stats.style.display='flex';
-  [qi,ab,sp].forEach(el=>el.disabled=false);
+  [qi,ab].forEach(el=>el.disabled=false);
   if(voices.length) vsel.disabled=false;
   qi.focus();
 }
@@ -405,11 +556,13 @@ async function loadCorpusFile(){
   catch(e){console.error(e);}
 }
 
-sp.addEventListener('input',()=>spv.textContent=SL[sp.value-1]);
 qi.addEventListener('keydown',e=>{if(e.key==='Enter')ab.click();});
 
 function generate(q){
-  const seed=hash(q.trim().toLowerCase()),rand=mkRand(seed),sigma=SIGMA;
+  const qseed=hash(q.trim().toLowerCase());
+  const tseed=Date.now()&0xFFFFFFFF;
+  const seed=(qseed^(tseed*2654435761>>>0))>>>0;
+  const rand=mkRand(seed),sigma=SIGMA;
   const count=sampleCount(rand,sigma),z=((count-MEAN)/sigma).toFixed(2);
   const sel=[];
   for(let i=0;i<count;i++) sel.push(words[Math.floor(rand()*words.length)]);
@@ -424,16 +577,16 @@ async function typeOut(q){
   stopFlag=false; typing=true; lastQ=q; built='';
   oc.style.display='block'; oq.textContent='"'+q+'"'; ot.innerHTML='<span class="cursor"></span>';
   mr.style.display='flex'; sv2.textContent=seed; wv.textContent=count; zv.textContent=z+'σ';
-  ar.classList.remove('hidden'); stb.style.display=''; cb.style.display='none'; rb.style.display='none';
+  ar.classList.remove('hidden'); stb.style.display=''; cb.style.display='none'; rb.style.display='none'; shb.style.display='none';
   stopSpeech();
-  const delay=SD[sp.value-1];
+  const delay=8;
   for(let i=0;i<sel.length;i++){
     if(stopFlag) break;
     speakWord(sel[i]);
     for(let c=0;c<sel[i].length;c++){if(stopFlag)break;built+=sel[i][c];ot.innerHTML=built+'<span class="cursor"></span>';await sleep(delay);}
     if(!stopFlag&&i<sel.length-1){built+=' ';ot.innerHTML=built+'<span class="cursor"></span>';await sleep(delay*1.8);}
   }
-  typing=false; stb.style.display='none'; cb.style.display=''; rb.style.display='';
+  typing=false; stb.style.display='none'; cb.style.display=''; rb.style.display=''; shb.style.display='';
   ot.innerHTML=built+'<span class="cursor"></span>';
 }
 
@@ -453,6 +606,24 @@ ab.addEventListener('click',()=>{const q=qi.value.trim();if(!q||!words.length||t
 stb.addEventListener('click',()=>{stopFlag=true;stopSpeech();});
 rb.addEventListener('click',()=>{if(!lastQ||typing)return;typeOut(lastQ);});
 cb.addEventListener('click',()=>{navigator.clipboard.writeText(built.trim()).then(()=>{cb.textContent='copied!';setTimeout(()=>cb.textContent='copy',1500);});});
+
+function openShare(){
+  const q=lastQ, text=built.trim();
+  const shareText=`I asked the Bible: "${q}"\n\nThe Lord responded:\n"${text}"\n\n— askthebible.com`;
+  const encoded=encodeURIComponent(shareText);
+  const shortText=`"${q}" → "${text.length>120?text.slice(0,117)+'…':text}" — Ask The Bible`;
+  spv.textContent=`"${q}" · "${text.length>80?text.slice(0,80)+'…':text}"`;
+  $('sx').onclick=()=>window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shortText),'_blank');
+  $('sf').onclick=()=>window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(window.location.href)+'&quote='+encoded,'_blank');
+  $('sw').onclick=()=>window.open('https://wa.me/?text='+encoded,'_blank');
+  $('sc').onclick=()=>{navigator.clipboard.writeText(shareText).then(()=>{$('sc').textContent='copied!';setTimeout(()=>$('sc').textContent='Copy text',1500);});};
+  sbk.style.display='block'; smd.style.display='block';
+}
+function closeShare(){ sbk.style.display='none'; smd.style.display='none'; }
+
+shb.addEventListener('click', openShare);
+sbk.addEventListener('click', closeShare);
+$('scl').addEventListener('click', closeShare);
 
 loadCorpusFile();
 </script>
