@@ -370,11 +370,14 @@
     color: rgba(245,233,200,0.5);
     line-height: 1.7;
     margin-bottom: 1.25rem;
-    max-height: 80px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    text-align: left;
+    padding: 8px 10px;
+    background: rgba(255,220,80,0.04);
+    border-radius: 6px;
+    border: 0.5px solid rgba(220,180,80,0.1);
   }
   .share-buttons {
     display: grid;
@@ -446,7 +449,6 @@
   </div>
 
 
-  <div class="meta" id="mr">seed <b id="sv2">—</b> &nbsp; words <b id="wv">—</b> &nbsp; z-score <b id="zv">—</b></div>
 
   <div class="output-card" id="oc">
     <div class="output-q" id="oq"></div>
@@ -576,7 +578,6 @@ async function typeOut(q){
   const{seed,count,z,sel}=generate(q);
   stopFlag=false; typing=true; lastQ=q; built='';
   oc.style.display='block'; oq.textContent='"'+q+'"'; ot.innerHTML='<span class="cursor"></span>';
-  mr.style.display='flex'; sv2.textContent=seed; wv.textContent=count; zv.textContent=z+'σ';
   ar.classList.remove('hidden'); stb.style.display=''; cb.style.display='none'; rb.style.display='none'; shb.style.display='none';
   stopSpeech();
   const delay=8;
@@ -609,12 +610,12 @@ cb.addEventListener('click',()=>{navigator.clipboard.writeText(built.trim()).the
 
 function openShare(){
   const q=lastQ, text=built.trim();
-  const shareText=`I asked the Bible: "${q}"\n\nThe Lord responded:\n"${text}"\n\n— askthebible.com`;
+  const siteUrl='https://enya454.github.io/DoesTheBibleKnow/';
+  const shareText=`I asked the Bible: "${q}"\n\nThe Lord responded:\n"${text}"\n\n${siteUrl}`;
   const encoded=encodeURIComponent(shareText);
-  const shortText=`"${q}" → "${text.length>120?text.slice(0,117)+'…':text}" — Ask The Bible`;
-  spv.textContent=`"${q}" · "${text.length>80?text.slice(0,80)+'…':text}"`;
-  $('sx').onclick=()=>window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(shortText),'_blank');
-  $('sf').onclick=()=>window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(window.location.href)+'&quote='+encoded,'_blank');
+  spv.textContent=`"${q}"\n\n"${text}"`;
+  $('sx').onclick=()=>window.open('https://twitter.com/intent/tweet?text='+encoded,'_blank');
+  $('sf').onclick=()=>window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(siteUrl)+'&quote='+encoded,'_blank');
   $('sw').onclick=()=>window.open('https://wa.me/?text='+encoded,'_blank');
   $('sc').onclick=()=>{navigator.clipboard.writeText(shareText).then(()=>{$('sc').textContent='copied!';setTimeout(()=>$('sc').textContent='Copy text',1500);});};
   sbk.style.display='block'; smd.style.display='block';
