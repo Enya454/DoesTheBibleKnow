@@ -631,34 +631,66 @@ function wrapText(ctx, text, x, maxWidth, lineHeight){
 
 async function generateShareImage(q, answer){
   await waitForFonts();
-  const W=1080, H=1080;
+  const W=1080;
+  const pad=70, innerW=W-160-pad*2;
+
+  // Measure text heights on a temp canvas first
+  const tmp=document.createElement('canvas');
+  tmp.width=W; tmp.height=200;
+  const tc=tmp.getContext('2d');
+
+  tc.font='italic 34px "IM Fell English", serif';
+  const qLines=wrapText(tc,`"${q}"`,W/2,innerW);
+  tc.font='italic 36px "IM Fell English", serif';
+  const aLines=wrapText(tc,`"${answer}"`,W/2,innerW);
+
+  // Calculate total height needed
+  const titleH=160;        // sky + title + top divider
+  const cardPadTop=54;
+  const qLabelH=34;
+  const qTextH=qLines.length*48;
+  const midDivH=52;
+  const aLabelH=34+46;
+  const aTextH=aLines.length*52;
+  const cardPadBottom=40;
+  const footerH=100;       // bottom divider + url
+  const cardContentH=cardPadTop+qLabelH+qTextH+midDivH+aLabelH+aTextH+cardPadBottom;
+  const H=titleH+cardContentH+footerH;
+
   const canvas=$('sic');
   canvas.width=W; canvas.height=H;
   const ctx=canvas.getContext('2d');
 
-  // Sky background
-  const sky=ctx.createRadialGradient(W/2,-80,0,W/2,-80,W*1.1);
-  sky.addColorStop(0,'#fffbe0');
-  sky.addColorStop(0.07,'#f5d76e');
-  sky.addColorStop(0.18,'#e8a030');
-  sky.addColorStop(0.32,'#b05a10');
-  sky.addColorStop(0.50,'#5a1a40');
-  sky.addColorStop(0.68,'#1a0a2e');
-  sky.addColorStop(1.0,'#0a1628');
+  // Dark sky — pushed much darker so title is readable
+  const sky=ctx.createRadialGradient(W/2,-60,0,W/2,-60,W*0.9);
+  sky.addColorStop(0,'#c8a030');
+  sky.addColorStop(0.08,'#7a3a08');
+  sky.addColorStop(0.22,'#3a1228');
+  sky.addColorStop(0.42,'#160820');
+  sky.addColorStop(0.65,'#0d0618');
+  sky.addColorStop(1.0,'#060210');
   ctx.fillStyle=sky;
   ctx.fillRect(0,0,W,H);
 
-  // God rays
+  // Extra dark overlay across the whole image so everything sits on near-black
+  const darkOverlay=ctx.createLinearGradient(0,0,0,H);
+  darkOverlay.addColorStop(0,'rgba(0,0,0,0.35)');
+  darkOverlay.addColorStop(0.25,'rgba(0,0,0,0.55)');
+  darkOverlay.addColorStop(1,'rgba(0,0,0,0.72)');
+  ctx.fillStyle=darkOverlay;
+  ctx.fillRect(0,0,W,H);
+
+  // God rays — subtler on darker bg
   const rayDefs=[
-    {angle:-52,alpha:0.10,w:80},
-    {angle:-38,alpha:0.13,w:110},
-    {angle:-22,alpha:0.09,w:90},
-    {angle:-10,alpha:0.15,w:130},
-    {angle:0,  alpha:0.18,w:150},
-    {angle:10, alpha:0.15,w:130},
-    {angle:22, alpha:0.09,w:90},
-    {angle:38, alpha:0.13,w:110},
-    {angle:52, alpha:0.10,w:80},
+    {angle:-52,alpha:0.07,w:80},
+    {angle:-38,alpha:0.10,w:110},
+    {angle:-22,alpha:0.07,w:90},
+    {angle:-10,alpha:0.12,w:130},
+    {angle:0,  alpha:0.14,w:150},
+    {angle:10, alpha:0.12,w:130},
+    {angle:22, alpha:0.07,w:90},
+    {angle:38, alpha:0.10,w:110},
+    {angle:52, alpha:0.07,w:80},
   ];
   for(const r of rayDefs){
     ctx.save();
@@ -666,31 +698,24 @@ async function generateShareImage(q, answer){
     ctx.rotate(r.angle*Math.PI/180);
     const rg=ctx.createLinearGradient(0,0,0,H);
     rg.addColorStop(0,`rgba(255,235,130,${r.alpha})`);
-    rg.addColorStop(0.45,`rgba(255,210,80,${r.alpha*0.3})`);
+    rg.addColorStop(0.4,`rgba(255,210,80,${r.alpha*0.25})`);
     rg.addColorStop(1,'rgba(255,200,60,0)');
     ctx.fillStyle=rg;
     ctx.beginPath();
-    ctx.moveTo(-r.w/2,0);
-    ctx.lineTo(r.w/2,0);
-    ctx.lineTo(r.w*1.8,H);
-    ctx.lineTo(-r.w*1.8,H);
-    ctx.closePath();
-    ctx.fill();
+    ctx.moveTo(-r.w/2,0); ctx.lineTo(r.w/2,0);
+    ctx.lineTo(r.w*1.8,H); ctx.lineTo(-r.w*1.8,H);
+    ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
   // Gate pillars
   const gL=ctx.createLinearGradient(0,0,55,0);
-  gL.addColorStop(0,'rgba(180,140,60,0.22)');
-  gL.addColorStop(1,'rgba(180,140,60,0)');
+  gL.addColorStop(0,'rgba(180,140,60,0.2)'); gL.addColorStop(1,'rgba(180,140,60,0)');
   ctx.fillStyle=gL; ctx.fillRect(0,0,55,H);
   const gR=ctx.createLinearGradient(W,0,W-55,0);
-  gR.addColorStop(0,'rgba(180,140,60,0.22)');
-  gR.addColorStop(1,'rgba(180,140,60,0)');
+  gR.addColorStop(0,'rgba(180,140,60,0.2)'); gR.addColorStop(1,'rgba(180,140,60,0)');
   ctx.fillStyle=gR; ctx.fillRect(W-55,0,55,H);
-
-  // Pillar border lines
-  ctx.strokeStyle='rgba(220,180,80,0.18)'; ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(220,180,80,0.15)'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(55,0); ctx.lineTo(55,H); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(W-55,0); ctx.lineTo(W-55,H); ctx.stroke();
 
@@ -698,87 +723,72 @@ async function generateShareImage(q, answer){
   ctx.textAlign='center';
   ctx.fillStyle='#ffe87a';
   ctx.font='72px UnifrakturMaguntia, serif';
-  ctx.shadowColor='rgba(255,220,80,0.8)'; ctx.shadowBlur=28;
-  ctx.fillText('Ask The Bible',W/2,110);
+  ctx.shadowColor='rgba(255,220,80,0.9)'; ctx.shadowBlur=22;
+  ctx.fillText('Ask The Bible',W/2,104);
   ctx.shadowBlur=0;
 
-  // Divider line
-  const div=ctx.createLinearGradient(120,0,W-120,0);
-  div.addColorStop(0,'rgba(220,180,80,0)');
-  div.addColorStop(0.5,'rgba(220,180,80,0.6)');
-  div.addColorStop(1,'rgba(220,180,80,0)');
-  ctx.strokeStyle=div; ctx.lineWidth=0.8;
-  ctx.beginPath(); ctx.moveTo(120,140); ctx.lineTo(W-120,140); ctx.stroke();
+  // Top divider
+  const drawDiv=(y)=>{
+    const d=ctx.createLinearGradient(120,0,W-120,0);
+    d.addColorStop(0,'rgba(220,180,80,0)');
+    d.addColorStop(0.5,'rgba(220,180,80,0.55)');
+    d.addColorStop(1,'rgba(220,180,80,0)');
+    ctx.strokeStyle=d; ctx.lineWidth=0.8;
+    ctx.beginPath(); ctx.moveTo(120,y); ctx.lineTo(W-120,y); ctx.stroke();
+  };
+  drawDiv(136);
 
-  // Card background
-  const cardX=80, cardY=170, cardW=W-160, cardH=H-290;
-  ctx.fillStyle='rgba(8,4,24,0.65)';
-  roundRect(ctx,cardX,cardY,cardW,cardH,18);
-  ctx.fill();
-  ctx.strokeStyle='rgba(220,180,80,0.28)'; ctx.lineWidth=0.8;
-  roundRect(ctx,cardX,cardY,cardW,cardH,18);
-  ctx.stroke();
+  // Card
+  const cardX=80, cardY=titleH, cardW=W-160, cardH=cardContentH;
+  ctx.fillStyle='rgba(5,2,16,0.78)';
+  roundRect(ctx,cardX,cardY,cardW,cardH,18); ctx.fill();
+  ctx.strokeStyle='rgba(220,180,80,0.25)'; ctx.lineWidth=0.8;
+  roundRect(ctx,cardX,cardY,cardW,cardH,18); ctx.stroke();
 
-  // Card inner glow
-  const glow=ctx.createRadialGradient(W/2,cardY,0,W/2,cardY,cardW*0.6);
-  glow.addColorStop(0,'rgba(255,200,60,0.07)');
-  glow.addColorStop(1,'rgba(255,200,60,0)');
-  ctx.fillStyle=glow;
-  roundRect(ctx,cardX,cardY,cardW,cardH,18);
-  ctx.fill();
+  // Card inner glow at top
+  const glow=ctx.createRadialGradient(W/2,cardY,0,W/2,cardY,cardW*0.5);
+  glow.addColorStop(0,'rgba(255,200,60,0.06)'); glow.addColorStop(1,'rgba(255,200,60,0)');
+  ctx.fillStyle=glow; roundRect(ctx,cardX,cardY,cardW,cardH,18); ctx.fill();
 
-  const pad=64, innerW=cardW-pad*2;
+  // Layout cursor
+  let cy=cardY+cardPadTop;
 
   // Question label
   ctx.fillStyle='rgba(245,220,120,0.5)';
   ctx.font='500 22px Cinzel, serif';
-  ctx.textAlign='center';
-  ctx.fillText('I ASKED:', W/2, cardY+54);
+  ctx.fillText('I ASKED:',W/2,cy); cy+=qLabelH+14;
 
   // Question text
-  ctx.fillStyle='rgba(245,233,200,0.75)';
+  ctx.fillStyle='rgba(245,233,200,0.78)';
   ctx.font='italic 34px "IM Fell English", serif';
-  const qLines=wrapText(ctx,`"${q}"`,W/2,innerW);
-  let qY=cardY+100;
-  for(const l of qLines){ ctx.fillText(l,W/2,qY); qY+=46; }
+  for(const l of qLines){ ctx.fillText(l,W/2,cy); cy+=48; }
 
-  // Middle divider
-  qY+=12;
+  // Mid divider
+  cy+=14;
   const md=ctx.createLinearGradient(cardX+pad,0,cardX+pad+innerW,0);
-  md.addColorStop(0,'rgba(220,180,80,0)');
-  md.addColorStop(0.5,'rgba(220,180,80,0.35)');
-  md.addColorStop(1,'rgba(220,180,80,0)');
+  md.addColorStop(0,'rgba(220,180,80,0)'); md.addColorStop(0.5,'rgba(220,180,80,0.3)'); md.addColorStop(1,'rgba(220,180,80,0)');
   ctx.strokeStyle=md; ctx.lineWidth=0.6;
-  ctx.beginPath(); ctx.moveTo(cardX+pad,qY); ctx.lineTo(cardX+pad+innerW,qY); ctx.stroke();
-  qY+=28;
+  ctx.beginPath(); ctx.moveTo(cardX+pad,cy); ctx.lineTo(cardX+pad+innerW,cy); ctx.stroke();
+  cy+=28;
 
   // Response label
   ctx.fillStyle='rgba(245,220,120,0.5)';
   ctx.font='500 22px Cinzel, serif';
-  ctx.fillText('THE LORD RESPONDED:', W/2, qY);
-  qY+=46;
+  ctx.fillText('THE LORD RESPONDED:',W/2,cy); cy+=46;
 
   // Response text
   ctx.fillStyle='#f5e9c8';
   ctx.font='italic 36px "IM Fell English", serif';
-  ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=6;
-  const aLines=wrapText(ctx,`"${answer}"`,W/2,innerW);
-  for(const l of aLines){ ctx.fillText(l,W/2,qY); qY+=50; }
+  ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=5;
+  for(const l of aLines){ ctx.fillText(l,W/2,cy); cy+=52; }
   ctx.shadowBlur=0;
 
-  // Bottom divider
-  const bdY=H-90;
-  const bd=ctx.createLinearGradient(120,0,W-120,0);
-  bd.addColorStop(0,'rgba(220,180,80,0)');
-  bd.addColorStop(0.5,'rgba(220,180,80,0.4)');
-  bd.addColorStop(1,'rgba(220,180,80,0)');
-  ctx.strokeStyle=bd; ctx.lineWidth=0.6;
-  ctx.beginPath(); ctx.moveTo(120,bdY); ctx.lineTo(W-120,bdY); ctx.stroke();
-
-  // URL
-  ctx.fillStyle='rgba(245,220,120,0.45)';
+  // Footer
+  const footerY=cardY+cardH;
+  drawDiv(footerY+28);
+  ctx.fillStyle='rgba(245,220,120,0.42)';
   ctx.font='500 24px Cinzel, serif';
-  ctx.fillText(siteUrl,W/2,H-44);
+  ctx.fillText(siteUrl,W/2,footerY+66);
 
   return canvas;
 }
